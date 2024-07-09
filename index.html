@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Edge</title>
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Microsoft_Edge_logo_%282019%29.png/768px-Microsoft_Edge_logo_%282019%29.png">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        #browser {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #fff;
+        }
+        #browser-controls {
+            display: flex;
+            align-items: center;
+            background: #f1f1f1;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+            position: relative;
+        }
+        #browser-controls .fullscreen {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 5px;
+            margin-left: auto;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        #browser-controls .fullscreen:hover {
+            background: #005a9e;
+        }
+        #browser-controls .close-window {
+            background: #e1e1e1;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+        #browser-controls .close-window:hover {
+            background: #d1d1d1;
+        }
+        #tabs {
+            display: flex;
+            background: #0078d4;
+            color: white;
+            padding: 5px;
+            align-items: center;
+            border-bottom: 1px solid #005a9e;
+        }
+        .tab {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            background: #005a9e;
+            border-radius: 3px 3px 0 0;
+            margin-right: 5px;
+            position: relative;
+        }
+        .tab.active {
+            background: #003a6b;
+        }
+        .tab .close-tab {
+            margin-left: 10px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        #address-bar {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+            padding: 5px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            position: relative;
+        }
+        #address-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 5px;
+        }
+        #address-bar .bookmark-button {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 18px;
+        }
+        #address-bar .bookmark-button:hover {
+            background: #005a9e;
+        }
+        #bookmark-bar {
+            display: flex;
+            background: #f1f1f1;
+            padding: 5px;
+            overflow-x: auto;
+            border-bottom: 1px solid #ccc;
+            margin-top: 5px;
+        }
+        #bookmark-bar a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #0078d4;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        #bookmark-bar a:hover {
+            background: #e1e1e1;
+        }
+        #content {
+            flex: 1;
+            overflow: hidden;
+        }
+        #iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #alert-box {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -20%);
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+        }
+        #alert-box p {
+            margin: 0 0 10px 0;
+        }
+        #alert-box button {
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #alert-box .get-extension {
+            background: #0078d4;
+            color: white;
+        }
+        #alert-box .get-extension:hover {
+            background: #005a9e;
+        }
+        #alert-box .no-thanks {
+            background: #e1e1e1;
+        }
+        #alert-box .no-thanks:hover {
+            background: #d1d1d1;
+        }
+        .context-menu {
+            display: none;
+            position: absolute;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .context-menu button {
+            display: block;
+            border: none;
+            background: #fff;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            text-align: left;
+        }
+        .context-menu button:hover {
+            background: #e1e1e1;
+        }
+    </style>
+</head>
+<body>
+    <div id="browser">
+        <div id="browser-controls">
+            <button id="back" class="disabled">←</button>
+            <button id="forward" class="disabled">→</button>
+            <button id="reload">↻</button>
+            <button class="fullscreen" id="fullscreen">□</button>
+            <button class="close-window" id="close-window">X</button>
+        </div>
+        <div id="tabs">
+            <button id="new-tab" class="new-tab-button">+</button>
+        </div>
+        <div id="address-bar">
+            <input type="text" id="address-input" placeholder="Enter URL and press Enter">
+            <button class="bookmark-button" id="bookmark-button">★</button>
+        </div>
+        <div id="bookmark-bar"></div>
+        <div id="content">
+            <iframe id="iframe" src="https://www.bing.com"></iframe>
+        </div>
+        <div id="alert-box">
+            <p>⚠ Warning: Not all sites will work unless you install this Chrome extension:</p>
+            <a href="https://chromewebstore.google.com/detail/hiframe-the-hyper-iframe/joibipdfkleencgfgbbncoheaekffdfn" target="_blank">
+                <button class="get-extension">Get Extension</button>
+            </a>
+            <button class="no-thanks">Nah, I'll do without</button>
+        </div>
+        <div class="context-menu" id="context-menu">
+            <button id="open-bookmark">Open</button>
+            <button id="delete-bookmark">Delete</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let tabs = [];
+            let currentTab = null;
+            let bookmarks = JSON.parse(localStorage.getItem('bookmarks')) || [];
+            const fullscreenButton = document.getElementById('fullscreen');
+            const closeWindowButton = document.getElementById('close-window');
+            const backButton = document.getElementById('back');
+            const forwardButton = document.getElementById('forward');
+            const reloadButton = document.getElementById('reload');
+            const newTabButton = document.getElementById('new-tab');
+            const alertBox = document.getElementById('alert-box');
+            const iframe = document.getElementById('iframe');
+            const tabsContainer = document.getElementById('tabs');
+            const addressInput = document.getElementById('address-input');
+            const bookmarkBar = document.getElementById('bookmark-bar');
+            const bookmarkButton = document.getElementById('bookmark-button');
+            const contextMenu = document.getElementById('context-menu');
+            const openBookmarkButton = document.getElementById('open-bookmark');
+            const deleteBookmarkButton = document.getElementById('delete-bookmark');
+            let contextMenuUrl = '';
+
+            function updateButtons() {
+                const canGoBack = iframe.contentWindow.history.length > 1;
+                const canGoForward = iframe.contentWindow.history.length > 1;
+                backButton.classList.toggle('disabled', !canGoBack);
+                forwardButton.classList.toggle('disabled', !canGoForward);
+            }
+
+            function createTab(title, url) {
+                const tab = document.createElement('div');
+                tab.className = 'tab';
+                tab.innerHTML = `${title} <button class="close-tab">X</button>`;
+                tab.querySelector('.close-tab').addEventListener('click', () => closeTab(tab));
+                tab.addEventListener('click', () => switchTab(url));
+                tabsContainer.appendChild(tab);
+                tabs.push({ element: tab, url });
+                if (tabs.length === 1) {
+                    tab.classList.add('active');
+                    currentTab = { element: tab, url };
+                    iframe.src = url;
+                    addressInput.value = url;
+                }
+                updateBookmarkBar();
+            }
+
+            function closeTab(tabElement) {
+                const url = tabs.find(tab => tab.element === tabElement).url;
+                tabs = tabs.filter(tab => tab.url !== url);
+                tabElement.remove();
+                if (currentTab && currentTab.url === url) {
+                    if (tabs.length > 0) {
+                        const newTab = tabs[0];
+                        switchTab(newTab.url);
+                    } else {
+                        iframe.src = 'about:blank';
+                        addressInput.value = '';
+                    }
+                }
+                updateBookmarkBar();
+            }
+
+            function switchTab(url) {
+                iframe.src = url;
+                addressInput.value = url;
+                if (currentTab) {
+                    currentTab.element.classList.remove('active');
+                }
+                currentTab = tabs.find(tab => tab.url === url);
+                if (currentTab) {
+                    currentTab.element.classList.add('active');
+                }
+                updateButtons();
+            }
+
+            function updateBookmarkBar() {
+                bookmarkBar.innerHTML = '';
+                bookmarks.forEach((bookmark, index) => {
+                    const bookmarkLink = document.createElement('a');
+                    bookmarkLink.href = bookmark.url;
+                    bookmarkLink.textContent = bookmark.title;
+                    bookmarkLink.dataset.index = index;
+                    bookmarkLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        switchTab(bookmark.url);
+                    });
+                    bookmarkLink.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        contextMenu.style.display = 'block';
+                        contextMenu.style.top = `${e.clientY}px`;
+                        contextMenu.style.left = `${e.clientX}px`;
+                        contextMenuUrl = bookmark.url;
+                    });
+                    bookmarkBar.appendChild(bookmarkLink);
+                });
+            }
+
+            function addBookmark() {
+                const url = addressInput.value;
+                const title = url.split('/')[2];
+                if (!bookmarks.some(b => b.url === url)) {
+                    bookmarks.push({ url, title });
+                    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+                    updateBookmarkBar();
+                }
+            }
+
+            function deleteBookmark(url) {
+                bookmarks = bookmarks.filter(b => b.url !== url);
+                localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+                updateBookmarkBar();
+            }
+
+            bookmarkButton.addEventListener('click', addBookmark);
+
+            openBookmarkButton.addEventListener('click', () => {
+                switchTab(contextMenuUrl);
+                contextMenu.style.display = 'none';
+            });
+
+            deleteBookmarkButton.addEventListener('click', () => {
+                deleteBookmark(contextMenuUrl);
+                contextMenu.style.display = 'none';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.style.display = 'none';
+                }
+            });
+
+            backButton.addEventListener('click', () => {
+                iframe.contentWindow.history.back();
+                updateButtons();
+            });
+
+            forwardButton.addEventListener('click', () => {
+                iframe.contentWindow.history.forward();
+                updateButtons();
+            });
+
+            reloadButton.addEventListener('click', () => {
+                iframe.contentWindow.location.reload();
+            });
+
+            newTabButton.addEventListener('click', () => {
+                createTab('New Tab', 'https://www.bing.com');
+            });
+
+            fullscreenButton.addEventListener('click', function() {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            });
+
+            closeWindowButton.addEventListener('click', function() {
+                window.close();
+            });
+
+            addressInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    let url = addressInput.value;
+                    if (!/^https?:\/\//i.test(url)) {
+                        url = 'https://' + url;
+                    }
+                    iframe.src = url;
+                    if (!tabs.some(tab => tab.url === url)) {
+                        createTab(url.split('/')[2], url);
+                    }
+                    updateButtons();
+                }
+            });
+
+            function showAlert() {
+                const isFirstVisit = !localStorage.getItem('alertShown');
+                if (isFirstVisit) {
+                    alertBox.style.display = 'block';
+                    localStorage.setItem('alertShown', 'true');
+                }
+            }
+
+            showAlert();
+        });
+    </script>
+</body>
+</html>
+
